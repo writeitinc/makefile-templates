@@ -1,4 +1,4 @@
-# This Makefile is based on a template (lib+tests.makefile version 1.0.0).
+# This Makefile is based on a template (lib+tests.makefile version 1.0.1).
 # See: https://github.com/writeitinc/makefile-templates
 
 NAME = # give it a name!
