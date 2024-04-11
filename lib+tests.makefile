@@ -1,4 +1,4 @@
-# This Makefile is based on a template (lib+tests.makefile version 1.0.2).
+# This Makefile is based on a template (lib+tests.makefile version 1.0.3).
 # See: https://github.com/writeitinc/makefile-templates
 
 NAME = # give it a name!
@@ -33,7 +33,7 @@ LIBRARIES = $(STATIC_LIB) $(SHARED_LIB)
 STATIC_LIB = $(LIB_DIR)/lib$(NAME).a
 SHARED_LIB = $(LIB_DIR)/lib$(NAME).so
 
-BINARIES = $(BIN_DIR)/test
+BINARIES = # $(BIN_DIR)/some-test
 
 .PHONY: default
 default: release
