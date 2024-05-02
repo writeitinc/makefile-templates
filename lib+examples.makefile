@@ -1,4 +1,4 @@
-# This Makefile is based on a template (lib+examples.makefile version 1.0.0).
+# This Makefile is based on a template (lib+examples.makefile version 1.0.1).
 # See: https://github.com/writeitinc/makefile-templates
 
 NAME = # give it a name!
@@ -9,11 +9,10 @@ ifndef NAME
 $(error NAME is not set)
 endif
 
-CFLAGS = $(WFLAGS) $(OPTIM) $(IFLAGS)
+CFLAGS = $(WFLAGS) $(OPTIM)
 
 CSTD = c99
 WFLAGS = -Wall -Wextra -pedantic -std=$(CSTD)
-IFLAGS = -I$(INCLUDE_DIR)
 
 WORKING_DIR = .
 BUILD_DIR = build
@@ -33,6 +32,7 @@ LIBRARIES = $(STATIC_LIB) $(SHARED_LIB)
 STATIC_LIB = $(LIB_DIR)/lib$(NAME).a
 SHARED_LIB = $(LIB_DIR)/lib$(NAME).so
 
+IFLAGS = -I$(INCLUDE_DIR)
 BINARIES = # $(BIN_DIR)/some-example
 
 .PHONY: default
@@ -88,7 +88,7 @@ $(BIN_DIR)/%: $(EXAMPLE_OBJ_DIR)/%.o $(LIBRARIES)
 	$(CC) -o $@ $< $(EXAMPLE_LDFLAGS) $(DEBUG) $(DEFINES)
 
 $(EXAMPLE_OBJ_DIR)/%.o: $(EXAMPLE_DIR)/%.c $(HEADERS) $(EXAMPLE_HEADERS)
-	$(CC) -o $@ $< -c $(CFLAGS) $(DEBUG) $(DEFINES)
+	$(CC) -o $@ $< -c $(CFLAGS) $(IFLAGS) $(DEBUG) $(DEFINES)
 
 # dirs
 
