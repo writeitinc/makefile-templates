@@ -1,4 +1,4 @@
-# This Makefile is based on a template (lib+tests+examples.makefile version 1.0.1).
+# This Makefile is based on a template (lib+tests+examples.makefile version 1.0.2).
 # See: https://github.com/writeitinc/makefile-templates
 
 NAME = # give it a name!
@@ -13,7 +13,7 @@ endif
 CFLAGS = $(WFLAGS) $(OPTIM)
 
 CSTD = c99
-WFLAGS = -Wall -Wextra -pedantic -std=$(CSTD)
+WFLAGS = -Wall -Wextra -Wpedantic -std=$(CSTD)
 
 WORKING_DIR = .
 BUILD_DIR = build
