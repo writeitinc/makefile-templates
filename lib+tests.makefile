@@ -1,4 +1,4 @@
-# This Makefile is based on a template (lib+tests.makefile version 2.0.0).
+# This Makefile is based on a template (lib+tests.makefile version 3.0.0).
 # See: https://github.com/writeitinc/makefile-templates
 
 NAME = # give it a name!
@@ -7,95 +7,240 @@ ifndef NAME
 $(error NAME is not set)
 endif
 
-CFLAGS = $(WFLAGS) $(OPTIM)
+#### Commandline Control Flags #################################################
 
+BUILD_TYPE = $(DEFAULT_BUILD_TYPE)
+CFLAGS = $(CFLAGS_DEFAULT)
+LDFLAGS = $(LTOFLAGS)
+LTOFLAGS = -flto=auto
+DEFINES = # none by default
+
+#### General Build Config ######################################################
+
+DEFAULT_BUILD_TYPE = release # release, debug, or sanitize
 CSTD = c99
-WFLAGS = -Wall -Wextra -Wpedantic -std=$(CSTD)
 
-# Inputs Dirs
+# Flags #
+
+CFLAGS_DEFAULT = $(OPTIM) $(WFLAGS)
+WFLAGS = -Wall -Wextra -Wpedantic -std=$(CSTD)
+PIC_FLAGS = -fPIC
+
+OPTIM = $(OPTIM_$(BUILD_TYPE))
+OPTIM_release = -O2
+OPTIM_debug = -g
+OPTIM_sanitize = $(OPTIM_debug)
+
+SANITIZE_FLAGS = $(SANITIZE_FLAGS_$(BUILD_TYPE))
+SANITIZE_FLAGS_release =
+SANITIZE_FLAGS_debug =
+SANITIZE_FLAGS_sanitize = -fsanitize=address,undefined
+
+# Output Directories #
+
+OUTPUT_DIR = build
+
+LIB_DIR = $(OUTPUT_DIR)/lib
+BIN_DIR = $(OUTPUT_DIR)/bin
+INTERMEDIATE_DIR = $(OUTPUT_DIR)/obj
+
+#### Library Build Config ######################################################
+
+# Inputs #
 
 SOURCE_DIR = src
 INCLUDE_DIR = include
 HEADER_DIR = $(INCLUDE_DIR)/$(NAME)
 
-TEST_DIR = tests
+SOURCES = $(wildcard $(SOURCE_DIR)/*.c)
+HEADERS = $(wildcard $(HEADER_DIR)/*.h)
 
-# Output Dirs
-
-BUILD_DIR = build
-
-OBJ_DIR = $(BUILD_DIR)/obj
-STATIC_OBJ_DIR = $(OBJ_DIR)/static
-SHARED_OBJ_DIR = $(OBJ_DIR)/shared
-TEST_OBJ_DIR = $(OBJ_DIR)/tests
-
-LIB_DIR = $(BUILD_DIR)/lib
-BIN_DIR = $(BUILD_DIR)/bin
-
-# Outputs
+# Outputs #
 
 LIBRARIES = $(STATIC_LIB) $(SHARED_LIB)
 STATIC_LIB = $(LIB_DIR)/lib$(NAME).a
 SHARED_LIB = $(LIB_DIR)/lib$(NAME).so
 
-EXECUTABLES = # $(BIN_DIR)/some-test
+# Intermediates #
 
-# Build Rules
+STATIC_OBJS = $(patsubst $(SOURCE_DIR)/%.c, $(INTERMEDIATE_DIR)/%.static.o, $(SOURCES))
+SHARED_OBJS = $(patsubst $(SOURCE_DIR)/%.c, $(INTERMEDIATE_DIR)/%.shared.o, $(SOURCES))
+.SECONDARY: $(STATIC_OBJS) $(SHARED_OBJS)
+
+#### Tests Build Config ########################################################
+
+# Flags #
+
+TEST_CFLAGS = $(CFLAGS)
+TEST_LDFLAGS = -L$(LIB_DIR) -l$(NAME) \
+		  -Wl,-rpath=$(LIB_DIR) \
+		  $(LDFLAGS)
+
+# Inputs #
+
+TEST_SOURCE_DIR = tests
+TEST_HEADER_DIR = tests
+
+TEST_SOURCES = $(wildcard $(TEST_SOURCE_DIR)/*.c)
+TEST_HEADERS = $(wildcard $(TEST_HEADERS_DIR)/*.h)
+
+# Outputs #
+
+TEST_BIN_DIR = $(BIN_DIR)/tests
+TESTS = $(patsubst $(TEST_SOURCE_DIR)/%.c, $(TEST_BIN_DIR)/%, $(TEST_SOURCES))
+
+# Intermediates #
+
+TEST_OBJS = $(patsubst $(TEST_SOURCE_DIR)/%.c, $(INTERMEDIATE_DIR)/%.test.o, $(TEST_SOURCES))
+.SECONDARY: $(TEST_OBJS)
+
+#### Make Targets ##############################################################
+
+### General ###
 
 .PHONY: default
-default: release
+default: $(DEFAULT_BUILD_TYPE)
 
 .PHONY: release
-release: OPTIM = -O3 $(LTOFLAGS)
-release: dirs $(LIBRARIES) $(EXECUTABLES)
+release: BUILD_TYPE = release
+release: output-dirs
+release: $(LIBRARIES)
+release: $(TESTS)
 
 .PHONY: debug
-debug: DEBUG = -fsanitize=address,undefined
-debug: OPTIM = -g
-debug: dirs $(LIBRARIES) $(EXECUTABLES)
+debug: BUILD_TYPE = debug
+debug: output-dirs
+debug: $(LIBRARIES)
+debug: $(TESTS)
 
-# library
+.PHONY: sanitize
+sanitize: BUILD_TYPE = sanitize
+sanitize: output-dirs
+sanitize: $(LIBRARIES)
+sanitize: $(TESTS)
 
-SOURCES = $(wildcard $(SOURCE_DIR)/*.c)
-HEADERS = $(wildcard $(HEADER_DIR)/*.h)
-STATIC_OBJS = $(patsubst $(SOURCE_DIR)/%.c, $(STATIC_OBJ_DIR)/%.o, $(SOURCES))
-SHARED_OBJS = $(patsubst $(SOURCE_DIR)/%.c, $(SHARED_OBJ_DIR)/%.o, $(SOURCES))
+.PHONY: clean
+clean:
+	$(RM) -r build/* # DO NOT use a variable here
 
-PIC_FLAGS = -fPIC
+### Library ###
+
+.PHONY: library
+library: library-$(DEFAULT_BUILD_TYPE)
+
+.PHONY: static-library
+static-library: static-library-$(DEFAULT_BUILD_TYPE)
+
+.PHONY: shared-library
+shared-library: shared-library-$(DEFAULT_BUILD_TYPE)
+
+.PHONY: library-release
+library-release: BUILD_TYPE = release
+library-release: library-output-dirs $(LIBRARIES)
+
+.PHONY: library-debug
+library-debug: BUILD_TYPE = debug
+library-debug: library-output-dirs $(LIBRARIES)
+
+.PHONY: library-sanitize
+library-sanitize: BUILD_TYPE = sanitize
+library-sanitize: library-output-dirs $(LIBRARIES)
+
+.PHONY: static-library-release
+static-library-release: BUILD_TYPE = release
+static-library-release: static-library-output-dirs $(STATIC_LIB)
+
+.PHONY: static-library-debug
+static-library-debug: BUILD_TYPE = debug
+static-library-debug: static-library-output-dirs $(STATIC_LIB)
+
+.PHONY: static-library-sanitize
+static-library-sanitize: BUILD_TYPE = sanitize
+static-library-sanitize: static-library-output-dirs $(STATIC_LIB)
+
+.PHONY: shared-library-release
+shared-library-release: BUILD_TYPE = release
+shared-library-release: shared-library-output-dirs $(SHARED_LIB)
+
+.PHONY: shared-library-debug
+shared-library-debug: BUILD_TYPE = debug
+shared-library-debug: shared-library-output-dirs $(SHARED_LIB)
+
+.PHONY: shared-library-sanitize
+shared-library-sanitize: BUILD_TYPE = sanitize
+shared-library-sanitize: shared-library-output-dirs $(SHARED_LIB)
+
+### Tests ###
+
+.PHONY: tests
+tests: tests-$(DEFAULT_BUILD_TYPE)
+
+.PHONY: tests-release
+tests-release: BUILD_TYPE = release
+tests-release: test-output-dirs $(TESTS)
+
+.PHONY: tests-debug
+tests-debug: BUILD_TYPE = debug
+tests-debug: test-output-dirs $(TESTS)
+
+.PHONY: tests-sanitize
+tests-sanitize: BUILD_TYPE = sanitize
+tests-sanitize: test-output-dirs $(TESTS)
+
+#### Library Build Rules #######################################################
 
 $(STATIC_LIB): $(STATIC_OBJS)
 	$(AR) crs $@ $^
 
 $(SHARED_LIB): $(SHARED_OBJS)
-	$(CC) -o $@ $^ -shared $(PIC_FLAGS) $(LDFLAGS)
+	$(CC) -o $@ $^ -shared $(LDFLAGS)
 
-$(STATIC_OBJ_DIR)/%.o: $(SOURCE_DIR)/%.c $(HEADERS)
-	$(CC) -o $@ $< -c -I$(HEADER_DIR) $(CFLAGS) $(DEBUG) $(DEFINES)
+$(INTERMEDIATE_DIR)/%.static.o: $(SOURCE_DIR)/%.c $(HEADERS)
+	$(CC) -o $@ $< -c -I$(HEADER_DIR) \
+		$(CFLAGS) $(LTOFLAGS) $(SANITIZE_FLAGS) $(DEFINES)
 
-$(SHARED_OBJ_DIR)/%.o: $(SOURCE_DIR)/%.c $(HEADERS)
-	$(CC) -o $@ $< -c -I$(HEADER_DIR) $(PIC_FLAGS) $(CFLAGS) $(DEBUG) $(DEFINES)
+$(INTERMEDIATE_DIR)/%.shared.o: $(SOURCE_DIR)/%.c $(HEADERS)
+	$(CC) -o $@ $< -c -I$(HEADER_DIR) $(PIC_FLAGS) \
+		$(CFLAGS) $(LTOFLAGS) $(SANITIZE_FLAGS) $(DEFINES)
 
-# tests
+#### Tests Build Rules #########################################################
 
-TEST_HEADERS = $(wildcard $(TEST_DIR)/*.h)
+$(TEST_BIN_DIR)/%: $(INTERMEDIATE_DIR)/%.test.o $(LIBRARIES)
+	$(CC) -o $@ $< \
+		$(TEST_LDFLAGS) $(SANITIZE_FLAGS) $(DEFINES)
 
-TEST_LDFLAGS = -L$(LIB_DIR) -l:lib$(NAME).a $(LDFLAGS)
+$(INTERMEDIATE_DIR)/%.test.o: $(TEST_SOURCE_DIR)/%.c $(TEST_HEADERS) $(HEADERS)
+	$(CC) -o $@ $< -c -I$(INCLUDE_DIR) \
+		$(TEST_CFLAGS) $(SANITIZE_FLAGS) $(DEFINES)
 
-$(BIN_DIR)/%: $(TEST_OBJ_DIR)/%.o $(LIBRARIES)
-	$(CC) -o $@ $< $(TEST_LDFLAGS) $(DEBUG) $(DEFINES)
+#### Directory Build Rules #####################################################
 
-$(TEST_OBJ_DIR)/%.o: $(TEST_DIR)/%.c $(HEADERS) $(TEST_HEADERS)
-	$(CC) -o $@ $< -c -I$(INCLUDE_DIR) $(CFLAGS) $(DEBUG) $(DEFINES)
+### General ###
 
-# dirs
-
-.PHONY: dirs
-dirs: $(STATIC_OBJ_DIR)/ $(SHARED_OBJ_DIR)/ $(TEST_OBJ_DIR)/ $(LIB_DIR)/ $(BIN_DIR)/
+.PHONY: output-dirs
+output-dirs: library-output-dirs
+output-dirs: test-output-dirs
 
 %/:
 	mkdir -p $@
 
-# install
+### Library ###
+
+.PHONY: library-output-dirs
+library-output-dirs: static-library-output-dirs shared-library-output-dirs
+
+.PHONY: static-library-output-dirs
+static-library-output-dirs: $(LIB_DIR)/ $(INTERMEDIATE_DIR)/
+
+.PHONY: shared-library-output-dirs
+shared-library-output-dirs: $(LIB_DIR)/ $(INTERMEDIATE_DIR)/
+
+### Tests ###
+
+.PHONY: test-output-dirs
+test-output-dirs: $(TEST_BIN_DIR)/ $(INTERMEDIATE_DIR)/
+
+#### Linux Installation ########################################################
 
 VERSION = $(VERSION_MAJOR).$(VERSION_MINOR).$(VERSION_PATCH)
 VERSION_MAJOR = 0
@@ -104,8 +249,8 @@ VERSION_PATCH = 0
 
 DEST_DIR = # root
 
-.PHONY: install-linux
-install-linux:
+.PHONY: linux-install
+linux-install:
 	install -Dm755 "$(LIB_DIR)/lib$(NAME).so"       "$(DEST_DIR)/usr/lib/lib$(NAME).so.$(VERSION)"
 	ln -snf        "lib$(NAME).so.$(VERSION)"       "$(DEST_DIR)/usr/lib/lib$(NAME).so.$(VERSION_MAJOR)"
 	ln -snf        "lib$(NAME).so.$(VERSION_MAJOR)" "$(DEST_DIR)/usr/lib/lib$(NAME).so"
@@ -115,9 +260,3 @@ install-linux:
 	install -Dm644 -t "$(DEST_DIR)/usr/lib/"                    "$(LIB_DIR)/lib$(NAME).a"
 	install -Dm644 -t "$(DEST_DIR)/usr/share/licenses/$(NAME)/" "LICENSE"
 	install -Dm644 -t "$(DEST_DIR)/usr/share/doc/$(NAME)/"      "README.md"
-
-# clean
-
-.PHONY: clean
-clean:
-	$(RM) -r build/*
