@@ -1,7 +1,12 @@
-# This Makefile is based on a template (lib.makefile version 4.0.0).
+# This Makefile is based on a template.
 # See: https://github.com/writeitinc/makefile-templates
 
 NAME = # give it a name!
+
+VERSION = $(VERSION_MAJOR).$(VERSION_MINOR).$(VERSION_PATCH)
+VERSION_MAJOR = 0
+VERSION_MINOR = 0
+VERSION_PATCH = 0
 
 ifndef NAME
 $(error NAME is not set)
@@ -18,7 +23,7 @@ DEFINES = # none by default
 USE_WINDOWS_CMD = # guess by default
 PRODUCE_WINDOWS_OUTPUTS = # guess by default
 
-#### General Build Config ######################################################
+#### Build Config ##############################################################
 
 DEFAULT_BUILD_TYPE = release # release, debug, or sanitize
 CSTD = c99
@@ -34,11 +39,11 @@ OPTIM_debug = -g
 OPTIM_sanitize = $(OPTIM_debug)
 
 SANITIZE_FLAGS = $(SANITIZE_FLAGS_$(BUILD_TYPE))
-SANITIZE_FLAGS_release =
-SANITIZE_FLAGS_debug =
+SANITIZE_FLAGS_release = # none by default
+SANITIZE_FLAGS_debug = # none by default
 SANITIZE_FLAGS_sanitize = -fsanitize=address,undefined
 
-STATIC_LIB_FLAGS =
+STATIC_LIB_FLAGS = # none by default
 SHARED_LIB_FLAGS = $(PLATFORM_SHARED_LIB_FLAGS)
 
 # Output Directories #
@@ -104,7 +109,7 @@ EXEC_EXT =
 PLATFORM_SHARED_LIB_FLAGS = -fPIC -fvisibility=hidden
 endif
 
-#### Make Targets ##############################################################
+#### Build Targets #############################################################
 
 ### General ###
 
@@ -215,23 +220,8 @@ static-library-output-dirs: $(LIB_DIR)/ $(INTERMEDIATE_DIR)/
 .PHONY: shared-library-output-dirs
 shared-library-output-dirs: $(LIB_DIR)/ $(INTERMEDIATE_DIR)/
 
-#### Linux Installation ########################################################
+#### Inclusions ################################################################
 
-VERSION = $(VERSION_MAJOR).$(VERSION_MINOR).$(VERSION_PATCH)
-VERSION_MAJOR = 0
-VERSION_MINOR = 0
-VERSION_PATCH = 0
-
-DEST_DIR = # root
-
-.PHONY: linux-install
-linux-install:
-	install -Dm755 "$(LIB_DIR)/lib$(NAME).so"       "$(DEST_DIR)/usr/lib/lib$(NAME).so.$(VERSION)"
-	ln -snf        "lib$(NAME).so.$(VERSION)"       "$(DEST_DIR)/usr/lib/lib$(NAME).so.$(VERSION_MAJOR)"
-	ln -snf        "lib$(NAME).so.$(VERSION_MAJOR)" "$(DEST_DIR)/usr/lib/lib$(NAME).so"
-	
-	find "$(HEADER_DIR)" -type f -exec install -Dm644 -t "$(DEST_DIR)/usr/include/$(NAME)/" "{}" \;
-	
-	install -Dm644 -t "$(DEST_DIR)/usr/lib/"                    "$(LIB_DIR)/lib$(NAME).a"
-	install -Dm644 -t "$(DEST_DIR)/usr/share/licenses/$(NAME)/" "LICENSE"
-	install -Dm644 -t "$(DEST_DIR)/usr/share/doc/$(NAME)/"      "README.md"
+include tests.makefile
+include examples.makefile
+include linux-install.makefile
