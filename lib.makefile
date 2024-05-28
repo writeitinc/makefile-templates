@@ -30,8 +30,10 @@ CSTD = c99
 
 # Flags #
 
-CFLAGS_DEFAULT = $(OPTIM) $(WFLAGS)
-WFLAGS = -Wall -Wextra -Wpedantic -std=$(CSTD)
+CFLAGS_DEFAULT = $(OPTIM) $(WFLAGS) $(FEATURE_FLAGS)
+WFLAGS = -Wall -Wextra -Wpedantic
+FEATURE_FLAGS = -std=$(CSTD) $(FEATURE_TEST_MACRO_FLAGS)
+FEATURE_TEST_MACRO_FLAGS = # none by default
 
 OPTIM = $(OPTIM_$(BUILD_TYPE))
 OPTIM_release = -O2
