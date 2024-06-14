@@ -16,7 +16,7 @@ endif
 
 BUILD_TYPE = $(DEFAULT_BUILD_TYPE)
 CFLAGS = $(CFLAGS_DEFAULT)
-LDFLAGS = $(LTOFLAGS)
+LDFLAGS = # none by default
 LTOFLAGS = -flto=auto
 DEFINES = # none by default
 
@@ -191,7 +191,7 @@ $(STATIC_LIB): $(STATIC_OBJS)
 	$(AR) crs $@ $^
 
 $(SHARED_LIB): $(SHARED_OBJS)
-	$(CC) -o $@ $^ -shared $(LDFLAGS)
+	$(CC) -o $@ $^ -shared $(LDFLAGS) $(LTOFLAGS)
 
 $(INTERMEDIATE_DIR)/%.static.o: $(SOURCE_DIR)/%.c $(HEADERS)
 	$(CC) -o $@ $< -c -I$(HEADER_DIR) $(STATIC_LIB_FLAGS) \
