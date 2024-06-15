@@ -1,16 +1,17 @@
 # This Makefile is based on a template.
 # See: https://github.com/writeitinc/makefile-templates
 
-PREFIX=/usr/local
+DESTDIR = # root by default
+PREFIX = /usr/local
 
 .PHONY: linux-install
 linux-install:
-	install -Dm755 "$(LIB_DIR)/lib$(NAME).so"       "$(PREFIX)/lib/lib$(NAME).so.$(VERSION)"
-	ln -snf        "lib$(NAME).so.$(VERSION)"       "$(PREFIX)/lib/lib$(NAME).so.$(VERSION_MAJOR)"
-	ln -snf        "lib$(NAME).so.$(VERSION_MAJOR)" "$(PREFIX)/lib/lib$(NAME).so"
+	install -Dm755 "$(LIB_DIR)/lib$(NAME).so"       "$(DESTDIR)$(PREFIX)/lib/lib$(NAME).so.$(VERSION)"
+	ln -snf        "lib$(NAME).so.$(VERSION)"       "$(DESTDIR)$(PREFIX)/lib/lib$(NAME).so.$(VERSION_MAJOR)"
+	ln -snf        "lib$(NAME).so.$(VERSION_MAJOR)" "$(DESTDIR)$(PREFIX)/lib/lib$(NAME).so"
 	
-	find "$(HEADER_DIR)" -type f -exec install -Dm644 "{}" "$(PREFIX)/{}" \;
+	find "$(HEADER_DIR)" -type f -exec install -Dm644 "{}" "$(DESTDIR)$(PREFIX)/{}" \;
 	
-	install -Dm644 -t "$(PREFIX)/lib/"                    "$(LIB_DIR)/lib$(NAME).a"
-	install -Dm644 -t "$(PREFIX)/share/licenses/$(NAME)/" "LICENSE"
-	install -Dm644 -t "$(PREFIX)/share/doc/$(NAME)/"      "README.md"
+	install -Dm644 -t "$(DESTDIR)$(PREFIX)/lib/"                    "$(LIB_DIR)/lib$(NAME).a"
+	install -Dm644 -t "$(DESTDIR)$(PREFIX)/share/licenses/$(NAME)/" "LICENSE"
+	install -Dm644 -t "$(DESTDIR)$(PREFIX)/share/doc/$(NAME)/"      "README.md"
