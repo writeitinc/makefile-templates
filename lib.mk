@@ -224,6 +224,6 @@ shared-library-output-dirs: $(LIB_DIR)/ $(INTERMEDIATE_DIR)/
 
 #### Inclusions ################################################################
 
-include tests.makefile
-include examples.makefile
-include linux-install.makefile
+include tests.mk
+include examples.mk
+include linux-install.mk
