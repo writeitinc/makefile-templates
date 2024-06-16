@@ -53,7 +53,7 @@ tests-sanitize: test-output-dirs $(TESTS)
 
 $(TEST_BIN_DIR)/%$(EXEC_EXT): $(INTERMEDIATE_DIR)/%.test.o $(LIBRARIES)
 	$(CC) -o $@ $< \
-		$(TEST_LDFLAGS) $(SANITIZE_FLAGS) $(DEFINES)
+		$(TEST_LDFLAGS) $(SANITIZE_FLAGS) $(LTOFLAGS) $(DEFINES)
 
 $(INTERMEDIATE_DIR)/%.test.o: $(TEST_SOURCE_DIR)/%.c $(TEST_HEADERS) $(HEADERS)
 	$(CC) -o $@ $< -c -I$(INCLUDE_DIR) \

@@ -53,7 +53,7 @@ examples-sanitize: example-output-dirs $(EXAMPLES)
 
 $(EXAMPLE_BIN_DIR)/%$(EXEC_EXT): $(INTERMEDIATE_DIR)/%.example.o $(LIBRARIES)
 	$(CC) -o $@ $< \
-		$(EXAMPLE_LDFLAGS) $(SANITIZE_FLAGS) $(DEFINES)
+		$(EXAMPLE_LDFLAGS) $(SANITIZE_FLAGS) $(LTOFLAGS) $(DEFINES)
 
 $(INTERMEDIATE_DIR)/%.example.o: $(EXAMPLE_SOURCE_DIR)/%.c $(EXAMPLE_HEADERS) $(HEADERS)
 	$(CC) -o $@ $< -c -I$(INCLUDE_DIR) \
